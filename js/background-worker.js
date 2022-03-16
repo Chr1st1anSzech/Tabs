@@ -3,7 +3,8 @@ var openedWindowId = null;
 var isPopupOpen = false;
 var isNavigationInProcess = false;
 
-const handleUrl = "www.bahn.de";
+const handleUrl = "https://www.bahn.de/";
+const closeWarningUrl = "https://www.bahn.de/angebot";
 
 async function openUrlAsync(url) {
     if (!isPopupOpen) {
@@ -84,33 +85,40 @@ async function openNewWindowAsync(url) {
     isNavigationInProcess = false;
 }
 
-function onBeforeNavigate(details) {
-    if(!navigationFinished){
-        if(details.url.includes('www.bahn.de')){
-            openUrl('https://www.bahn.de/');
-            chrome.tabs.remove(details.tabId);
-            navigationFinished = true;
-        }
-    }
-    else{
-        //navigationFinished = false;
-    }
-    
-}
-
 async function onTabUpdated(tabId, changeInfo, tab) {
     console.log('Incoming: Tab='+tabId);
     if(!isEmpty(changeInfo.url) && 
-            openedTabId != tabId && 
-            !isEmpty(handleUrl) && 
-            tab.url.includes(handleUrl)){
-
-        isNavigationInProcess = true;
-        await openUrlAsync(tab.url);
-        console.log('Remove: Tab='+tabId);
-        chrome.tabs.remove(tabId);
+        openedTabId != tabId && 
+        !isEmpty(handleUrl))
+    {
+        if(tab.url.includes(closeWarningUrl)){
+            ShowNotification();
+        }
+        else if(tab.url.includes(handleUrl)){
+            isNavigationInProcess = true;
+            await openUrlAsync(tab.url);
+            console.log('Remove: Tab='+tabId);
+            chrome.tabs.remove(tabId);
+        }
     }
-    
+}
+
+function ShowNotification(){
+    chrome.notifications.create("Test", 
+    {
+        title : "Ein Titel",
+        iconUrl : "/icons/tabs-128x128.png",
+        type : "basic",
+        requireInteraction : true,
+        message : "Eine Nachricht",
+        buttons : [{title : "OK"}, {title : "Abbrechen"}]
+    },
+    onNotificationShown
+    );
+}
+
+function onNotificationShown(notificationId) {
+    console.log("Test123");
 }
 
 function onWindowClosed(closedWindowId) {

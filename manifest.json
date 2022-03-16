@@ -11,9 +11,14 @@
     "permissions": [
         "webNavigation",
         "tabs",
-        "system.display"
+        "system.display",
+        "notifications"
     ],
     "background": {
         "service_worker": "js/background-worker.js"
-    }
+    },
+    "action": {
+        "default_title": "Click to view a popup",
+        "default_popup": "popup/popup.html"
+      }
 }
