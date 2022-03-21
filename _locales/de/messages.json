@@ -1,10 +1,18 @@
 {
    "extensionDescription": {
       "description": "Description of the extension.",
-      "message": ""
+      "message": "Eine Erweiterung, die Tabs einer Webseite in einem separaten Popup-Fenster öffnet."
    },
    "extensionName": {
       "description": "Name of the extension.",
       "message": "Tabs"
+   },
+   "notificationTitle": {
+      "description": "Title of the notification.",
+      "message": "Dokument noch in Bearbeitung"
+   },
+   "notificationMessage": {
+      "description": "Message of the notification.",
+      "message": "Möchten Sie die Bearbeitung des Dokuments abbrechen? Der aktuelle Bearbeitungsstand geht verloren."
    }
 }
