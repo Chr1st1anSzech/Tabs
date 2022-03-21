@@ -13,11 +13,9 @@ async function openUrlAsync(url, windowId, tabId) {
 }
 
 function focusWindow(windowId){
-    chrome.windows.get(windowId)
-        .then(window => {
-            chrome.windows.update(window.id, { focused: true });
-        });
-    
+    if (windowId != null) {
+        chrome.windows.update(window.id, { focused: true });
+    }
 }
 
 function isEmpty(str) {
@@ -96,8 +94,9 @@ async function openNewWindowAsync(url) {
 }
 
 async function onTabUpdated(tabId, changeInfo, tab) {
-    const popupTabId = await chrome.storage.local.get(['PopupTabId']);
-    const popupWindowId = await chrome.storage.local.get(['PopupWindowId']);
+    const data = await chrome.storage.local.get(['PopupTabId', 'PopupWindowId']);
+    const popupTabId = data.PopupTabId;
+    const popupWindowId = data.PopupWindowId;
 
     if (popupTabId != tabId &&
         !isEmpty(changeInfo.url) &&
@@ -115,14 +114,10 @@ async function onTabUpdated(tabId, changeInfo, tab) {
 }
 
 function removeTab(tabId) {
-    chrome.tabs.get(tabId)
-        .then(tab => {
-            console.log(`Remove tab with id ${tabId}.`);
-            chrome.tabs.remove(tab.id);
-        },
-            () => {
-                console.log(`There is no tab with id ${tabId}.`);
-            });
+    if (tabId != null) {
+        console.log(`Remove tab with id ${tabId}.`);
+        chrome.tabs.remove(tabId);
+    }
 }
 
 function showNotification(tabId) {
@@ -144,7 +139,7 @@ function onButtonClicked(notificationId, buttonIndex) {
 }
 
 async function onWindowClosedAsync(closedWindowId) {
-    const popupWindowId = await chrome.storage.local.get(['PopupWindowId']);
+    const popupWindowId = (await chrome.storage.local.get(['PopupWindowId'])).PopupWindowId;
     if (closedWindowId == popupWindowId) {
         setVariablesToNull();
     }
@@ -152,14 +147,17 @@ async function onWindowClosedAsync(closedWindowId) {
 
 function setVariablesToNull(){
     chrome.storage.local.set({'PopupTabId': null }, function() {
-        console.log(`Set property PopupTabId to null.`);
+        console.log('Set property PopupTabId to null.');
     });
     chrome.storage.local.set({'PopupWindowId': null }, function() {
-        console.log(`Set property PopupWindowId to null.`);
+        console.log('Set property PopupWindowId to null.');
     });
 }
 
-setVariablesToNull();
+chrome.runtime.onStartup.addListener(function() {
+    console.log('Clear storage at startup.');
+    setVariablesToNull();
+});
 chrome.tabs.onUpdated.addListener(onTabUpdated);
 chrome.notifications.onButtonClicked.addListener(onButtonClicked);
 chrome.windows.onRemoved.addListener(onWindowClosedAsync);
