@@ -1,16 +1,14 @@
-var openedTabId = null;
-var openedWindowId = null;
 var notificationTabIds = {}
 
 const handleUrl = "https://www.bahn.de/";
 const closeWarningUrl = "https://www.bahn.de/angebot";
 
-async function openUrlAsync(url, windowId) {
+async function openUrlAsync(url, windowId, tabId) {
     if (windowId == null) {
         await openNewWindowAsync(url);
     }
     else {
-        navigateToUrl(openedTabId, url);
+        navigateToUrl(tabId, url);
     }
 }
 
@@ -87,13 +85,21 @@ async function openNewWindowAsync(url) {
         type: "popup",
         url: url
     });
-    openedWindowId = window.id;
-    openedTabId = window.tabs[0].id;
-    console.log(`A new tab with id ${openedTabId} was created.`);
+    chrome.storage.local.set({'PopupTabId': window.tabs[0].id}, function() {
+        console.log(`Save value ${window.tabs[0].id} for property PopupTabId.`);
+    });
+    chrome.storage.local.set({'PopupWindowId': window.id}, function() {
+        console.log(`Save value ${window.id} for property PopupWindowId.`);
+    });
+
+    console.log(`A new tab with id was created.`);
 }
 
 async function onTabUpdated(tabId, changeInfo, tab) {
-    if (openedTabId != tabId &&
+    const popupTabId = chrome.storage.local.get(['PopupTabId']);
+    const popupWindowId = chrome.storage.local.get(['PopupWindowId']);
+
+    if (popupTabId != tabId &&
         !isEmpty(changeInfo.url) &&
         !isEmpty(handleUrl)) {
         console.log(`A new tab with id ${tabId} was detected.`);
@@ -101,8 +107,8 @@ async function onTabUpdated(tabId, changeInfo, tab) {
             showNotification(tabId);
         }
         else if (tab.url.includes(handleUrl)) {
-            await openUrlAsync(tab.url, openedWindowId);
-            focusWindow(openedWindowId);
+            await openUrlAsync(tab.url, popupWindowId, popupTabId);
+            focusWindow(popupWindowId);
             removeTab(tabId);
         }
     }
@@ -138,9 +144,14 @@ function onButtonClicked(notificationId, buttonIndex) {
 }
 
 function onWindowClosed(closedWindowId) {
-    if (closedWindowId == openedWindowId) {
-        openedTabId = null;
-        openedWindowId = null;
+    const popupWindowId = chrome.storage.local.get(['PopupWindowId']);
+    if (closedWindowId == popupWindowId) {
+        chrome.storage.local.set({'PopupTabId': null }, function() {
+            console.log(`Set property PopupTabId to null.`);
+        });
+        chrome.storage.local.set({'PopupWindowId': null }, function() {
+            console.log(`Set property PopupWindowId to null.`);
+        });
     }
 }
 
