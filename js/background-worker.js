@@ -146,15 +146,20 @@ function onButtonClicked(notificationId, buttonIndex) {
 function onWindowClosed(closedWindowId) {
     const popupWindowId = chrome.storage.local.get(['PopupWindowId']);
     if (closedWindowId == popupWindowId) {
-        chrome.storage.local.set({'PopupTabId': null }, function() {
-            console.log(`Set property PopupTabId to null.`);
-        });
-        chrome.storage.local.set({'PopupWindowId': null }, function() {
-            console.log(`Set property PopupWindowId to null.`);
-        });
+        setVariablesToNull();
     }
 }
 
+function setVariablesToNull(){
+    chrome.storage.local.set({'PopupTabId': null }, function() {
+        console.log(`Set property PopupTabId to null.`);
+    });
+    chrome.storage.local.set({'PopupWindowId': null }, function() {
+        console.log(`Set property PopupWindowId to null.`);
+    });
+}
+
+setVariablesToNull();
 chrome.tabs.onUpdated.addListener(onTabUpdated);
 chrome.notifications.onButtonClicked.addListener(onButtonClicked);
 chrome.windows.onRemoved.addListener(onWindowClosed);
