@@ -14,7 +14,7 @@ async function openUrlAsync(url, windowId, tabId) {
 
 function focusWindow(windowId){
     if (windowId != null) {
-        chrome.windows.update(window.id, { focused: true });
+        chrome.windows.update(windowId, { focused: true });
     }
 }
 
