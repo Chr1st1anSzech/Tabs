@@ -96,8 +96,8 @@ async function openNewWindowAsync(url) {
 }
 
 async function onTabUpdated(tabId, changeInfo, tab) {
-    const popupTabId = chrome.storage.local.get(['PopupTabId']);
-    const popupWindowId = chrome.storage.local.get(['PopupWindowId']);
+    const popupTabId = await chrome.storage.local.get(['PopupTabId']);
+    const popupWindowId = await chrome.storage.local.get(['PopupWindowId']);
 
     if (popupTabId != tabId &&
         !isEmpty(changeInfo.url) &&
@@ -143,8 +143,8 @@ function onButtonClicked(notificationId, buttonIndex) {
     
 }
 
-function onWindowClosed(closedWindowId) {
-    const popupWindowId = chrome.storage.local.get(['PopupWindowId']);
+async function onWindowClosedAsync(closedWindowId) {
+    const popupWindowId = await chrome.storage.local.get(['PopupWindowId']);
     if (closedWindowId == popupWindowId) {
         setVariablesToNull();
     }
@@ -162,4 +162,4 @@ function setVariablesToNull(){
 setVariablesToNull();
 chrome.tabs.onUpdated.addListener(onTabUpdated);
 chrome.notifications.onButtonClicked.addListener(onButtonClicked);
-chrome.windows.onRemoved.addListener(onWindowClosed);
+chrome.windows.onRemoved.addListener(onWindowClosedAsync);
