@@ -13,14 +13,21 @@
 
 
   /**
-   * Die Breite des Fensters, das geöffnet werden soll.
+   * Die Breite des neuen Fensters.
    * @const {number}
    */
     export const newWindowWidth = 1200;
 
 
   /**
-   * Die Höhe des Fensters, das geöffnet werden soll.
+   * Die Höhe des neuen Fensters.
    * @const {number}
    */
    export const newWindowHeight = 750;
+
+
+   /**
+    * Der Typ des neuen Fensters.
+    * @const {string}
+    */
+    export const newWindowType = "popup";

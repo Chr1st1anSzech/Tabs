@@ -50,7 +50,7 @@ async function openNewWindowAsync(url) {
         width: config.newWindowWidth,
         left: point.left,
         top: point.top,
-        type: "popup",
+        type: config.newWindowType,
         url: url
     });
     chrome.storage.local.set({'PopupTabId': window.tabs[0].id}, function() {
