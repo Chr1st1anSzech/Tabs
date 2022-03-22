@@ -2,22 +2,15 @@
 
 import * as config from '/js/config.js';
 
+import * as storageModule from '/js/storage.js';
 import * as helperModule from '/js/helper.js';
 import * as windowModule from'/js/window.js';
 import * as notificationModule from'/js/notification.js';
 
-/**
- * Setzt alle gespeicherten Variablen zurück.
- */
-function setVariablesToNull(){
-    chrome.storage.local.set({'PopupTabId': null }, function() {
-        console.log('Set property PopupTabId to null.');
-    });
-    chrome.storage.local.set({'PopupWindowId': null }, function() {
-        console.log('Set property PopupWindowId to null.');
-    });
-}
-
+chrome.runtime.onStartup.addListener(onBrowserStartAsync);
+chrome.tabs.onUpdated.addListener(onTabUpdatedAsync);
+chrome.notifications.onButtonClicked.addListener(notificationModule.onButtonClicked);
+chrome.windows.onRemoved.addListener(onWindowClosedAsync);
 
 /**
  * Öffne eine URL entweder im vorhandenen Fenster oder erstelle ein neues Fenster. 
@@ -42,7 +35,9 @@ async function openNewWindowAsync(url) {
     if (!helperModule.isUrl(url)) {
         return;
     }
+
     console.log('Create new window and open URL.');
+    
     const point = await windowModule.calcCenterWindow(config.newWindowWidth, config.newWindowHeight);
     let window = await chrome.windows.create({
         focused: true,
@@ -53,14 +48,10 @@ async function openNewWindowAsync(url) {
         type: config.newWindowType,
         url: url
     });
-    chrome.storage.local.set({'PopupTabId': window.tabs[0].id}, function() {
-        console.log(`Save value ${window.tabs[0].id} for property PopupTabId.`);
-    });
-    chrome.storage.local.set({'PopupWindowId': window.id}, function() {
-        console.log(`Save value ${window.id} for property PopupWindowId.`);
-    });
 
-    console.log(`A new tab with id was created.`);
+    await storageModule.saveVariablesAsync(window.tabs[0].id, window.id);
+
+    console.log(`A new tab with id ${window.tabs[0].id} was created.`);
 }
 
 
@@ -101,9 +92,8 @@ function removeTab(tabId) {
  * @param {Tab} tab Der Tab, der aktualisiert wurde.
  */
 async function onTabUpdatedAsync(tabId, changeInfo, tab) {
-    const data = await chrome.storage.local.get(['PopupTabId', 'PopupWindowId']);
-    const popupTabId = data.PopupTabId;
-    const popupWindowId = data.PopupWindowId;
+    const popupTabId = await storageModule.getVariableAsync('PopupTabId');
+    const popupWindowId = await storageModule.getVariableAsync('PopupWindowId');
 
     if (popupTabId != tabId &&
         !helperModule.isEmpty(changeInfo.url) &&
@@ -127,9 +117,9 @@ async function onTabUpdatedAsync(tabId, changeInfo, tab) {
  * @param {number} closedWindowId Bezeichner des Tabs, der geschlossen wurde.
  */
 async function onWindowClosedAsync(closedWindowId) {
-    const popupWindowId = (await chrome.storage.local.get(['PopupWindowId'])).PopupWindowId;
+    const popupWindowId = await storageModule.getVariableAsync('PopupWindowId');
     if (closedWindowId == popupWindowId) {
-        setVariablesToNull();
+        await storageModule.resetVariablesAsync();
     }
 }
 
@@ -137,13 +127,7 @@ async function onWindowClosedAsync(closedWindowId) {
 /**
  * Setzt alle gespeicherten Variablen beim Starten des Browsers zurück.
  */
-function onBrowserStart() {
+async function onBrowserStartAsync() {
     console.log('Clear storage at startup.');
-    setVariablesToNull();
+    await storageModule.resetVariablesAsync();
 }
-
-
-chrome.runtime.onStartup.addListener(onBrowserStart);
-chrome.tabs.onUpdated.addListener(onTabUpdatedAsync);
-chrome.notifications.onButtonClicked.addListener(notificationModule.onButtonClicked);
-chrome.windows.onRemoved.addListener(onWindowClosedAsync);
