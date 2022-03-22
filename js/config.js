@@ -13,14 +13,14 @@
 
 
   /**
-   * Die URL, für die eine Benachrichtigung angezeigt werden soll.
+   * Die Breite des Fensters, das geöffnet werden soll.
    * @const {number}
    */
     export const newWindowWidth = 1200;
 
 
   /**
-   * Die URL, für die eine Benachrichtigung angezeigt werden soll.
+   * Die Höhe des Fensters, das geöffnet werden soll.
    * @const {number}
    */
    export const newWindowHeight = 750;
