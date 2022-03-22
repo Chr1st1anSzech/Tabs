@@ -1,18 +1,11 @@
-var notificationTabIds = {}
+'use strict';
 
-/**
- * Die URL, die in einem separaten Fenster geöffnet werden soll.
- * @const {string}
- */
-const handleUrl = "https://www.bahn.de/";
+import {handleUrl} from '/js/config.js';
+import {closeWarningUrl} from '/js/config.js';
 
-
-/**
- * Die URL, für die eine Benachrichtigung angezeigt werden soll.
- * @const {string}
- */
-const closeWarningUrl = "https://www.bahn.de/angebot";
-
+import * as helperModule from '/js/helper.js';
+import * as windowModule from'/js/window.js';
+import * as notificationModule from'/js/notification.js';
 
 /**
  * Setzt alle gespeicherten Variablen zurück.
@@ -24,94 +17,6 @@ function setVariablesToNull(){
     chrome.storage.local.set({'PopupWindowId': null }, function() {
         console.log('Set property PopupWindowId to null.');
     });
-}
-
-
-/**
- * Prüft, ob eine Zeichenkette leer oder undefiniert ist.
- * @param {string} str Zu prüfende Zeichenkette.
- * @return {boolean} Ergebnis der Prüfung.
- */
-function isEmpty(str) {
-    return (!str || str.length === 0);
-}
-
-
-/**
- * Prüft, ob eine Zeichenkette dem Muster einer URL entspricht.
- * @param {string} str Zu prüfende Zeichenkette.
- * @return {boolean} Ergebnis der Prüfung.
- */
-function isUrl(str) {
-    return (str && str.match(/((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/));
-}
-
-
-/**
- * Prüft, ob eine Zeichenkette eine Zahl ist.
- * @param {string} str Zu prüfende Zeichenkette.
- * @return {boolean} Ergebnis der Prüfung.
- */
-function isNumber(str) {
-    return (str || str.match(/\d+/));
-}
-
-
-/**
- * Verändert die Größe eines Fensters.
- * @param {number} windowId Bezeichner des Fensters, dessen Größer verändert werden soll.
- * @param {number} newWidth Neue Breite des Fenster.
- * @param {number} newHeight Neue Höhe des Fenster
- */
-function resizeWindow(windowId, newWidth, newHeight) {
-    if (!windowId || !isNumber(newHeight) || !isNumber(newWidth)) {
-        return;
-    }
-    chrome.windows.update(windowId, { height: parseInt(newHeight), width: parseInt(newWidth) });
-}
-
-
-/**
- * Berechnet den oberen, linken Punkt des Fensters, damit es zentriert ist.
- * @param {number} width Breite des Fenster.
- * @param {number} height Höhe des Fenster
- * @return {object} Der oberen, linken Punkt des Fensters.
- */
-async function calcCenterWindow(width, height) {
-    const displayInfos = await chrome.system.display.getInfo();
-    let point = {
-        left: 0,
-        top: 0
-    }
-    if (displayInfos.length > 0) {
-        const displayBounds = displayInfos[0].bounds;
-        point.left = ~~((displayBounds.width - width) / 2);
-        point.top = ~~((displayBounds.height - height) / 2);
-    }
-    return point;
-}
-
-
-/**
- * Zentriert ein Fenster.
- * @param {number} windowId Bezeichner des Fensters, das zentriert werden soll.
- * @param {number} width Breite des Fenster.
- * @param {number} height Höhe des Fenster
- */
-async function centerWindow(windowId, width, height) {
-    const point = await calcCenterWindow(width, height);
-    chrome.windows.update(windowId, { left: point.left, top: point.top });
-}
-
-
-/**
- * Lege auf ein Fenster den Fokus.
- * @param {number} windowId Bezeichner des Tabs.
- */
-function focusWindow(windowId){
-    if (windowId != null) {
-        chrome.windows.update(windowId, { focused: true });
-    }
 }
 
 
@@ -135,13 +40,13 @@ async function openUrlAsync(url, tabId) {
  * @param {string} url Adresse der Webseite, die geöffnet werden soll.
  */
 async function openNewWindowAsync(url) {
-    if (!isUrl(url)) {
+    if (!helperModule.isUrl(url)) {
         return;
     }
     console.log('Create new window and open URL.');
     const width = 1200;
     const height = 750;
-    const point = await calcCenterWindow(width, height);
+    const point = await windowModule.calcCenterWindow(width, height);
     let window = await chrome.windows.create({
         focused: true,
         height: height,
@@ -168,7 +73,7 @@ async function openNewWindowAsync(url) {
  * @param {string} newUrl Adresse der Webseite, die geöffnet werden soll.
  */
 function navigateToUrl(tabId, newUrl) {
-    if (!tabId || !isUrl(newUrl)) {
+    if (!tabId || !helperModule.isUrl(newUrl)) {
         return;
     }
     console.log(`Call the URL in the open tab with id ${tabId}.`);
@@ -204,41 +109,18 @@ async function onTabUpdatedAsync(tabId, changeInfo, tab) {
     const popupWindowId = data.PopupWindowId;
 
     if (popupTabId != tabId &&
-        !isEmpty(changeInfo.url) &&
-        !isEmpty(handleUrl)) {
+        !helperModule.isEmpty(changeInfo.url) &&
+        !helperModule.isEmpty(handleUrl)) {
         console.log(`A new tab with id ${tabId} was detected.`);
         if (tab.url.includes(closeWarningUrl)) {
-            showNotification(tabId);
+            notificationModule.showNotification(tabId);
         }
         else if (tab.url.includes(handleUrl)) {
             await openUrlAsync(tab.url, popupTabId);
-            focusWindow(popupWindowId);
+            windowModule.focusWindow(popupWindowId);
             removeTab(tabId);
         }
     }
-}
-
-
-/**
- * Zeige eine Benachrichtigung an.
- * @param {number} tabId Bezeichner des Tabs.
- */
-function showNotification(tabId) {
-    const notificationId = `TabsWarningMessage-${Date.now()}`;
-    chrome.notifications.create(notificationId,
-        {
-            type: "basic",
-            title: "Dokument noch in Bearbeitung",
-            message: "Möchten Sie die Bearbeitung des Dokuments abbrechen? Der aktuelle Bearbeitungsstand geht verloren.",
-            iconUrl: "/icons/tabs-128x128.png",
-            requireInteraction: true,
-            buttons: [{ title: "OK" }, { title: "Abbrechen" }]
-        });
-    notificationTabIds[notificationId] = tabId;
-}
-
-function onButtonClicked(notificationId, buttonIndex) {
-    
 }
 
 
@@ -266,5 +148,5 @@ function onBrowserStart() {
 
 chrome.runtime.onStartup.addListener(onBrowserStart);
 chrome.tabs.onUpdated.addListener(onTabUpdatedAsync);
-chrome.notifications.onButtonClicked.addListener(onButtonClicked);
+chrome.notifications.onButtonClicked.addListener(notificationModule.onButtonClicked);
 chrome.windows.onRemoved.addListener(onWindowClosedAsync);

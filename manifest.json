@@ -15,7 +15,8 @@
         "notifications"
     ],
     "background": {
-        "service_worker": "js/background-worker.js"
+        "service_worker": "background.js",
+        "type": "module"
     },
     "action": {
         "default_title": "Click to view a popup",
