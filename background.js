@@ -1,7 +1,6 @@
 'use strict';
 
-import {handleUrl} from '/js/config.js';
-import {closeWarningUrl} from '/js/config.js';
+import * as config from '/js/config.js';
 
 import * as helperModule from '/js/helper.js';
 import * as windowModule from'/js/window.js';
@@ -44,13 +43,11 @@ async function openNewWindowAsync(url) {
         return;
     }
     console.log('Create new window and open URL.');
-    const width = 1200;
-    const height = 750;
-    const point = await windowModule.calcCenterWindow(width, height);
+    const point = await windowModule.calcCenterWindow(config.newWindowWidth, config.newWindowHeight);
     let window = await chrome.windows.create({
         focused: true,
-        height: height,
-        width: width,
+        height: config.newWindowHeight,
+        width: config.newWindowWidth,
         left: point.left,
         top: point.top,
         type: "popup",
@@ -110,12 +107,12 @@ async function onTabUpdatedAsync(tabId, changeInfo, tab) {
 
     if (popupTabId != tabId &&
         !helperModule.isEmpty(changeInfo.url) &&
-        !helperModule.isEmpty(handleUrl)) {
+        !helperModule.isEmpty(config.handleUrl)) {
         console.log(`A new tab with id ${tabId} was detected.`);
-        if (tab.url.includes(closeWarningUrl)) {
+        if (tab.url.includes(config.closeWarningUrl)) {
             notificationModule.showNotification(tabId);
         }
-        else if (tab.url.includes(handleUrl)) {
+        else if (tab.url.includes(config.handleUrl)) {
             await openUrlAsync(tab.url, popupTabId);
             windowModule.focusWindow(popupWindowId);
             removeTab(tabId);
