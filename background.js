@@ -24,7 +24,6 @@ async function openUrlAsync(url, tabId) {
     else {
         navigateToUrl(tabId, url);
     }
-    await storageModule.saveVariableAsync('CurrentURL', url);
 }
 
 
@@ -39,7 +38,7 @@ async function openNewWindowAsync(url) {
 
     console.log('Create new window and open URL.');
     
-    const coord = await windowModule.calcCoordToPlaceWindowOnSide(windowModule.rightSide);
+    const coord = await windowModule.calcCoordToPlaceWindowOnSide(config.side);
     let window = await chrome.windows.create({
         focused: true,
         height: coord.height,
@@ -93,22 +92,25 @@ function removeTab(tabId) {
  * @param {Tab} tab Der Tab, der aktualisiert wurde.
  */
 async function onTabUpdatedAsync(tabId, changeInfo, tab) {
-    const popupTabId = await storageModule.getVariableAsync('PopupTabId');
-    const popupWindowId = await storageModule.getVariableAsync('PopupWindowId');
-    const currentURL = await storageModule.getVariableAsync('CurrentURL');
-    
-    if (popupTabId != tabId &&
-        !helperModule.isEmpty(changeInfo.url) &&
-        !helperModule.isEmpty(config.handleUrl)) {
-        console.log(`A new tab with id ${tabId} was detected.`);
-        if (currentURL!= null && currentURL.includes(config.closeWarningUrl)) {
-            notificationModule.showNotification(tabId);
-            removeTab(tabId);
+    if( !helperModule.isEmpty(changeInfo.url) ){
+        const popupTabId = await storageModule.getVariableAsync('PopupTabId');
+        if(popupTabId == tabId){
+            await storageModule.saveVariableAsync('CurrentURL', changeInfo.url);
         }
-        else if (tab.url.includes(config.handleUrl)) {
-            await openUrlAsync(tab.url, popupTabId);
-            windowModule.focusWindow(popupWindowId);
-            removeTab(tabId);
+        else if (!helperModule.isEmpty(config.handleUrl)) {
+            console.log(`A new tab with id ${tabId} was detected.`);
+            const currentURL = await storageModule.getVariableAsync('CurrentURL');
+            if (currentURL!= null && currentURL.includes(config.closeWarningUrl)) {
+                notificationModule.showNotification(tabId);
+                removeTab(tabId);
+            }
+            else if (tab.url.includes(config.handleUrl)) {
+                const popupWindowId = await storageModule.getVariableAsync('PopupWindowId');
+                await openUrlAsync(tab.url, popupTabId);
+                windowModule.focusWindow(popupWindowId);
+                removeTab(tabId);
+                await storageModule.saveVariableAsync('CurrentURL', tab.url);
+            }
         }
     }
 }
