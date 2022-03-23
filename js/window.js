@@ -1,3 +1,7 @@
+export const leftSide = 0;
+export const rightSide = 1;
+
+
 /**
  * Verändert die Größe eines Fensters.
  * @param {number} windowId Bezeichner des Fensters, dessen Größer verändert werden soll.
@@ -42,6 +46,30 @@
  export async function centerWindow(windowId, width, height) {
     const point = await calcCenterWindow(width, height);
     chrome.windows.update(windowId, { left: point.left, top: point.top });
+}
+
+
+/**
+ * Berechnet die Koordinaten, um ein Fenster auf eine Seite des Bildschirms zu legen.
+ * @param {number} side Seite des Bildschirms.
+ */
+ export async function calcCoordToPlaceWindowOnSide(side) {
+    const displayInfos = await chrome.system.display.getInfo();
+    let coord = {
+        left: 0,
+        top: 0,
+        height: 0,
+        width : 0
+    }
+    
+    const displayBounds = displayInfos[0].bounds;
+    const halfWidth = ~~(displayBounds.width / 2);
+    coord.width = halfWidth;
+    coord.height = displayBounds.height;
+    if (displayInfos.length > 0 && side == rightSide) {
+        coord.left = halfWidth;
+    }
+    return coord;
 }
 
 
