@@ -1,5 +1,5 @@
-export const leftSide = 0;
-export const rightSide = 1;
+export const leftSide = "left";
+export const rightSide = "right";
 
 
 /**
@@ -50,8 +50,10 @@ export const rightSide = 1;
 
 
 /**
- * Berechnet die Koordinaten, um ein Fenster auf eine Seite des Bildschirms zu legen.
- * @param {number} side Seite des Bildschirms.
+ * Zentriert ein Fenster.
+ * @param {number} windowId Bezeichner des Fensters, das zentriert werden soll.
+ * @param {number} width Breite des Fenster.
+ * @param {number} height Höhe des Fenster
  */
  export async function calcCoordToPlaceWindowOnSide(side) {
     const displayInfos = await chrome.system.display.getInfo();
