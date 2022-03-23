@@ -97,19 +97,22 @@ async function onTabUpdatedAsync(tabId, changeInfo, tab) {
         if(popupTabId == tabId){
             await storageModule.saveVariableAsync('CurrentURL', changeInfo.url);
         }
-        else if (!helperModule.isEmpty(config.handleUrl)) {
+        else if (!helperModule.isEmpty(config.handleUrl) && changeInfo.url.includes(config.handleUrl) ) {
+            
             console.log(`A new tab with id ${tabId} was detected.`);
             const currentURL = await storageModule.getVariableAsync('CurrentURL');
-            if (currentURL!= null && currentURL.includes(config.closeWarningUrl)) {
+            const popupWindowId = await storageModule.getVariableAsync('PopupWindowId');
+            
+            if (currentURL != null && currentURL.includes(config.closeWarningUrl)) {
                 notificationModule.showNotification(tabId);
                 removeTab(tabId);
+                windowModule.focusWindow(popupWindowId);
             }
-            else if (tab.url.includes(config.handleUrl)) {
-                const popupWindowId = await storageModule.getVariableAsync('PopupWindowId');
-                await openUrlAsync(tab.url, popupTabId);
+            else {
+                await openUrlAsync(changeInfo.url, popupTabId);
                 windowModule.focusWindow(popupWindowId);
                 removeTab(tabId);
-                await storageModule.saveVariableAsync('CurrentURL', tab.url);
+                await storageModule.saveVariableAsync('CurrentURL', changeInfo.url);
             }
         }
     }
