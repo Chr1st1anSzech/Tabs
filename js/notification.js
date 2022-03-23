@@ -8,7 +8,7 @@
         {
             type: "basic",
             title: "Dokument noch in Bearbeitung",
-            message: "Möchten Sie die Bearbeitung des Dokuments abbrechen? Der aktuelle Bearbeitungsstand geht verloren.",
+            message: "Der aktuelle Bearbeitungsstand geht verloren, wenn Sie die Seite wechseln.",
             iconUrl: "/icons/tabs-128x128.png",
             requireInteraction: true
         });
