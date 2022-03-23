@@ -24,6 +24,7 @@ async function openUrlAsync(url, tabId) {
     else {
         navigateToUrl(tabId, url);
     }
+    await storageModule.saveVariableAsync('CurrentURL', url);
 }
 
 
@@ -38,13 +39,13 @@ async function openNewWindowAsync(url) {
 
     console.log('Create new window and open URL.');
     
-    const point = await windowModule.calcCenterWindow(config.newWindowWidth, config.newWindowHeight);
+    const coord = await windowModule.calcCoordToPlaceWindowOnSide(windowModule.rightSide);
     let window = await chrome.windows.create({
         focused: true,
-        height: config.newWindowHeight,
-        width: config.newWindowWidth,
-        left: point.left,
-        top: point.top,
+        height: coord.height,
+        width: coord.width,
+        left: coord.left,
+        top: coord.top,
         type: config.newWindowType,
         url: url
     });
@@ -94,13 +95,15 @@ function removeTab(tabId) {
 async function onTabUpdatedAsync(tabId, changeInfo, tab) {
     const popupTabId = await storageModule.getVariableAsync('PopupTabId');
     const popupWindowId = await storageModule.getVariableAsync('PopupWindowId');
-
+    const currentURL = await storageModule.getVariableAsync('CurrentURL');
+    
     if (popupTabId != tabId &&
         !helperModule.isEmpty(changeInfo.url) &&
         !helperModule.isEmpty(config.handleUrl)) {
         console.log(`A new tab with id ${tabId} was detected.`);
-        if (tab.url.includes(config.closeWarningUrl)) {
+        if (currentURL!= null && currentURL.includes(config.closeWarningUrl)) {
             notificationModule.showNotification(tabId);
+            removeTab(tabId);
         }
         else if (tab.url.includes(config.handleUrl)) {
             await openUrlAsync(tab.url, popupTabId);
