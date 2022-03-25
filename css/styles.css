@@ -1,5 +1,5 @@
 html {
-    width: 235px;
+    width: 250px;
 }
 
 body {
@@ -27,6 +27,10 @@ h3 {
 label {
     font-size: 12px;
     line-height: 1.5em;
+}
+
+option{
+    padding: 5px;
 }
 
 select {

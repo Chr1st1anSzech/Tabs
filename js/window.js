@@ -1,5 +1,6 @@
-export const leftSide = "left";
-export const rightSide = "right";
+const leftSide = "left";
+const rightSide = "right";
+const fullScreen = "fullscreen";
 
 
 /**
@@ -50,10 +51,8 @@ export const rightSide = "right";
 
 
 /**
- * Zentriert ein Fenster.
- * @param {number} windowId Bezeichner des Fensters, das zentriert werden soll.
- * @param {number} width Breite des Fenster.
- * @param {number} height Höhe des Fenster
+ * Positioniert ein Fenster entweder auf der rechten oder linken Seite oder auf dem zweiten Bildschirm.
+ * @param {string} side Position des Fensters.
  */
  export async function calcCoordToPlaceWindowOnSide(side) {
     const displayInfos = await chrome.system.display.getInfo();
@@ -64,13 +63,22 @@ export const rightSide = "right";
         width : 0
     }
     
-    const displayBounds = displayInfos[0].bounds;
-    const halfWidth = ~~(displayBounds.width / 2);
-    coord.width = halfWidth;
-    coord.height = displayBounds.height;
-    if (displayInfos.length > 0 && side == rightSide) {
-        coord.left = halfWidth;
+    const firstDisplayBounds = displayInfos[0].bounds;
+    if (side == fullScreen && displayInfos.length > 1){
+        const secondDisplayBounds = displayInfos[1].bounds;
+        coord.left = firstDisplayBounds.width + 1;
+        coord.width = secondDisplayBounds.width;
+        coord.height = secondDisplayBounds.height;
     }
+    else{
+        const halfWidth = ~~(firstDisplayBounds.width / 2);
+        coord.width = halfWidth;
+        coord.height = firstDisplayBounds.height;
+        if (side == rightSide) {
+            coord.left = halfWidth;
+        }
+    }
+    
     return coord;
 }
 
