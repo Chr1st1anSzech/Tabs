@@ -13,10 +13,24 @@
 
 
   /**
-   * Die Breite des neuen Fensters.
-   * @const {number}
+   * Der Title der Benachrichtigung.
+   * @const {string}
    */
-    export const side = "left";
+   export const notificationTitle = "Dokument noch in Bearbeitung";
+
+
+   /**
+    * Der Inhalt der Benachrichtigung.
+    * @const {string}
+    */
+    export const notificationMessage = "Der aktuelle Bearbeitungsstand geht verloren, wenn Sie die Seite wechseln.";
+
+
+    /**
+     * Das Symbolbildchen der Benachrichtigung.
+     * @const {string}
+     */
+     export const notificationIcon = "/icons/tabs-128x128.png";
 
 
    /**
