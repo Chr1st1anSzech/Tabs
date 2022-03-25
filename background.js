@@ -37,8 +37,9 @@ async function openNewWindowAsync(url) {
     }
 
     console.log('Create new window and open URL.');
-    
-    const coord = await windowModule.calcCoordToPlaceWindowOnSide(config.side);
+
+    const side = await storageModule.getVariableAsync('side');
+    const coord = await windowModule.calcCoordToPlaceWindowOnSide(side);
     let window = await chrome.windows.create({
         focused: true,
         height: coord.height,
